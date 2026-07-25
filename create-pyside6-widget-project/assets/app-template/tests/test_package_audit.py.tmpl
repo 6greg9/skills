@@ -1,0 +1,53 @@
+from __future__ import annotations
+
+import importlib.util
+import sys
+from pathlib import Path
+
+
+def load_audit_module():
+    app_root = Path(__file__).resolve().parents[1]
+    module_path = app_root / "scripts" / "audit_package.py"
+    spec = importlib.util.spec_from_file_location("generated_audit_package", module_path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_minimal_audit_accepts_widgets_runtime(tmp_path) -> None:
+    audit = load_audit_module()
+    platform = tmp_path / "_internal" / "PySide6" / "plugins" / "platforms"
+    platform.mkdir(parents=True)
+    (platform / "qwindows.dll").write_bytes(b"runtime")
+    (tmp_path / "sample.exe").write_bytes(b"executable")
+
+    report = audit.audit_package(tmp_path, "minimal")
+
+    assert report.violations == []
+
+
+def test_minimal_audit_rejects_qml_translations_and_extra_plugins(tmp_path) -> None:
+    audit = load_audit_module()
+    pyside = tmp_path / "_internal" / "PySide6"
+    (pyside / "translations").mkdir(parents=True)
+    (pyside / "translations" / "qt_zh_TW.qm").write_bytes(b"translation")
+    (pyside / "plugins" / "imageformats").mkdir(parents=True)
+    (pyside / "plugins" / "imageformats" / "qjpeg.dll").write_bytes(b"plugin")
+    (pyside / "Qt6Qml.dll").write_bytes(b"qml")
+
+    report = audit.audit_package(tmp_path, "minimal")
+
+    assert len(report.violations) == 3
+
+
+def test_full_audit_reports_without_minimal_violations(tmp_path) -> None:
+    audit = load_audit_module()
+    pyside = tmp_path / "_internal" / "PySide6"
+    pyside.mkdir(parents=True)
+    (pyside / "Qt6Quick.dll").write_bytes(b"quick")
+
+    report = audit.audit_package(tmp_path, "full")
+
+    assert report.violations == []

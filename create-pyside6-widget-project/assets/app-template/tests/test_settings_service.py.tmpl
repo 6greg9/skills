@@ -1,0 +1,10 @@
+from __future__ import annotations
+
+from __PACKAGE_NAME__.services.settings_service import SettingsService
+
+
+def test_default_settings_are_packaged() -> None:
+    settings = SettingsService.load()
+
+    assert settings.title == __DISPLAY_NAME_PY__
+    assert settings.initial_count == 0

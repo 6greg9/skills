@@ -1,0 +1,21 @@
+# __DISPLAY_NAME__ workspace
+
+uv workspace containing the `__PROJECT_NAME__` PySide6 Widgets application.
+
+## Develop
+
+```powershell
+uv sync
+uv run --package __PROJECT_NAME__ python apps/__PROJECT_NAME__/scripts/compile_ui.py
+uv run --package __PROJECT_NAME__ pytest apps/__PROJECT_NAME__/tests
+uv run --package __PROJECT_NAME__ __PROJECT_NAME__
+```
+
+## Build
+
+```powershell
+uv build --package __PROJECT_NAME__
+uv run --package __PROJECT_NAME__ python apps/__PROJECT_NAME__/scripts/package_app.py --profile minimal
+```
+
+The packaging wrapper audits the runtime bundle and performs a hidden packaged-app smoke test. Use `--profile full` only when the application intentionally needs Qt modules or plugins excluded by the Widgets-only minimal profile.

@@ -1,0 +1,50 @@
+from __future__ import annotations
+
+from PySide6.QtCore import Qt
+
+from __PACKAGE_NAME__.models.counter_model import CounterModel
+from __PACKAGE_NAME__.services.settings_service import AppSettings
+from __PACKAGE_NAME__.viewmodels.counter_view_model import CounterViewModel
+from __PACKAGE_NAME__.views.view_dashboard_page import View_DashboardPage
+from __PACKAGE_NAME__.views.view_main_window import View_MainWindow
+from __PACKAGE_NAME__.views.view_settings_page import View_SettingsPage
+
+
+def create_window():
+    view_model = CounterViewModel(CounterModel())
+    dashboard = View_DashboardPage(view_model)
+    settings = View_SettingsPage(AppSettings(title="Example", initial_count=0))
+    return View_MainWindow([dashboard, settings]), dashboard, settings
+
+
+def test_sidebar_switches_stacked_pages(qtbot) -> None:
+    window, dashboard, settings = create_window()
+    qtbot.addWidget(window)
+
+    assert window.navigation_list.count() == 2
+    assert window.stacked_widget.count() == 2
+    assert window.stacked_widget.currentWidget() is dashboard
+    assert window.page_title_label.text() == "Dashboard"
+
+    window.navigation_list.setCurrentRow(1)
+
+    assert window.stacked_widget.currentWidget() is settings
+    assert window.page_title_label.text() == "Settings"
+
+
+def test_dashboard_increment_button_updates_counter(qtbot) -> None:
+    window, dashboard, _ = create_window()
+    qtbot.addWidget(window)
+
+    assert dashboard.counter_value_label.text() == "0"
+    qtbot.mouseClick(dashboard.increment_button, Qt.MouseButton.LeftButton)
+
+    assert dashboard.counter_value_label.text() == "1"
+
+
+def test_settings_page_renders_loaded_settings(qtbot) -> None:
+    settings = View_SettingsPage(AppSettings(title="Example App", initial_count=7))
+    qtbot.addWidget(settings)
+
+    assert settings.application_name_value_label.text() == "Example App"
+    assert settings.initial_count_value_label.text() == "7"

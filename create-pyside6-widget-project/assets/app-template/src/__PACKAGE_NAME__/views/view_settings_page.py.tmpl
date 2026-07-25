@@ -1,0 +1,18 @@
+from __future__ import annotations
+
+from PySide6.QtWidgets import QWidget
+
+from ..services.settings_service import AppSettings
+from .settings_page_ui import Ui_SettingsPage
+
+
+class View_SettingsPage(QWidget, Ui_SettingsPage):
+    def __init__(
+        self,
+        settings: AppSettings,
+        parent: QWidget | None = None,
+    ) -> None:
+        super().__init__(parent)
+        self.setupUi(self)
+        self.application_name_value_label.setText(settings.title)
+        self.initial_count_value_label.setText(str(settings.initial_count))

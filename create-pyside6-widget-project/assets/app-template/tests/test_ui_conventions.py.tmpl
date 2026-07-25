@@ -1,0 +1,18 @@
+from __future__ import annotations
+
+import subprocess
+import sys
+from pathlib import Path
+
+
+def test_ui_view_contract() -> None:
+    app_root = Path(__file__).resolve().parents[1]
+    result = subprocess.run(
+        [sys.executable, str(app_root / "scripts" / "compile_ui.py"), "--check"],
+        cwd=app_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr

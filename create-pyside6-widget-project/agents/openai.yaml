@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create PySide6 Widget Project"
+  short_description: "Scaffold uv-managed PySide6 Widget apps"
+  default_prompt: "Use $create-pyside6-widget-project to create a uv-managed PySide6 Widgets project from Qt Designer UI files."
