@@ -1,0 +1,24 @@
+from __future__ import annotations
+
+import tomllib
+from dataclasses import dataclass
+from importlib.resources import files
+
+
+@dataclass(frozen=True)
+class AppSettings:
+    title: str
+    initial_count: int
+
+
+class SettingsService:
+    @staticmethod
+    def load() -> AppSettings:
+        config_file = files("__PACKAGE_NAME__").joinpath("config", "default.toml")
+        with config_file.open("rb") as stream:
+            data = tomllib.load(stream)
+        application = data["application"]
+        return AppSettings(
+            title=str(application["title"]),
+            initial_count=int(application["initial_count"]),
+        )

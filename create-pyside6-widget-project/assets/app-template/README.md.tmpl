@@ -1,0 +1,33 @@
+# __DISPLAY_NAME__
+
+PySide6 Qt Widgets application managed by `uv`. Edit UI layout only in Qt Designer `.ui` files; regenerate `*_ui.py` after every UI change.
+
+## Develop
+
+```powershell
+uv sync
+uv run python scripts/compile_ui.py
+uv run pytest
+uv run __PROJECT_NAME__
+```
+
+Validate UI/View naming without regenerating files:
+
+```powershell
+uv run python scripts/compile_ui.py --check
+```
+
+## Build
+
+```powershell
+uv build
+uv run python scripts/package_app.py --profile minimal
+```
+
+The packaging wrapper performs a clean PyInstaller build, rejects unnecessary Qt runtime modules/plugins, and runs a hidden packaged-app smoke test. The executable is written under `dist/__PROJECT_NAME__/`.
+
+Use `--profile full` only after intentionally adding QML, Quick, PDF, OpenGL, SVG, VirtualKeyboard, Qt Network, localization, or extra plugin features. Inspect an existing runtime tree with:
+
+```powershell
+uv run python scripts/audit_package.py dist/__PROJECT_NAME__ --profile minimal
+```

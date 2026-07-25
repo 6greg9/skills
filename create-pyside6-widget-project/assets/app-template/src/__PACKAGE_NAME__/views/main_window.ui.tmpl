@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>960</width>
+    <height>640</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>__DISPLAY_NAME_XML__</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="shell_layout">
+    <property name="spacing"><number>0</number></property>
+    <property name="leftMargin"><number>0</number></property>
+    <property name="topMargin"><number>0</number></property>
+    <property name="rightMargin"><number>0</number></property>
+    <property name="bottomMargin"><number>0</number></property>
+    <item>
+     <widget class="QFrame" name="sidebar_frame">
+      <property name="minimumSize"><size><width>220</width><height>0</height></size></property>
+      <property name="maximumSize"><size><width>220</width><height>16777215</height></size></property>
+      <layout class="QVBoxLayout" name="sidebar_layout">
+       <property name="spacing"><number>16</number></property>
+       <property name="leftMargin"><number>16</number></property>
+       <property name="topMargin"><number>24</number></property>
+       <property name="rightMargin"><number>16</number></property>
+       <property name="bottomMargin"><number>24</number></property>
+       <item>
+        <widget class="QLabel" name="app_title_label">
+         <property name="text"><string>__DISPLAY_NAME_XML__</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QListWidget" name="navigation_list">
+         <item><property name="text"><string>Dashboard</string></property></item>
+         <item><property name="text"><string>Settings</string></property></item>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QFrame" name="content_frame">
+      <layout class="QVBoxLayout" name="content_layout">
+       <property name="spacing"><number>20</number></property>
+       <property name="leftMargin"><number>32</number></property>
+       <property name="topMargin"><number>28</number></property>
+       <property name="rightMargin"><number>32</number></property>
+       <property name="bottomMargin"><number>32</number></property>
+       <item>
+        <widget class="QLabel" name="page_title_label">
+         <property name="text"><string>Dashboard</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QStackedWidget" name="stacked_widget"/>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar"/>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

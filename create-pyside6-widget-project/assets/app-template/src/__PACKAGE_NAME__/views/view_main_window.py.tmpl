@@ -1,0 +1,32 @@
+from __future__ import annotations
+
+from collections.abc import Sequence
+
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QMainWindow, QWidget
+
+from .main_window_ui import Ui_MainWindow
+
+
+class View_MainWindow(QMainWindow, Ui_MainWindow):
+    def __init__(
+        self,
+        pages: Sequence[QWidget],
+        parent: QWidget | None = None,
+    ) -> None:
+        super().__init__(parent)
+        self.setupUi(self)
+        if len(pages) != self.navigation_list.count():
+            raise ValueError("page count must match the Designer navigation items")
+        for page in pages:
+            self.stacked_widget.addWidget(page)
+        self.navigation_list.currentRowChanged.connect(self._show_page)
+        self.navigation_list.setCurrentRow(0)
+
+    @Slot(int)
+    def _show_page(self, index: int) -> None:
+        if index < 0 or index >= self.stacked_widget.count():
+            return
+        self.stacked_widget.setCurrentIndex(index)
+        item = self.navigation_list.item(index)
+        self.page_title_label.setText(item.text())

@@ -1,0 +1,85 @@
+QMainWindow {
+    background: #f3f4f6;
+}
+
+QFrame#sidebar_frame {
+    background: #111827;
+}
+
+QLabel#app_title_label {
+    color: #f9fafb;
+    font-size: 20px;
+    font-weight: 700;
+    padding: 0 8px 12px 8px;
+}
+
+QListWidget#navigation_list {
+    background: transparent;
+    border: none;
+    color: #d1d5db;
+    font-size: 14px;
+    outline: none;
+}
+
+QListWidget#navigation_list::item {
+    border-radius: 6px;
+    margin: 2px 0;
+    padding: 12px;
+}
+
+QListWidget#navigation_list::item:hover {
+    background: #1f2937;
+}
+
+QListWidget#navigation_list::item:selected {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+QFrame#content_frame {
+    background: #f3f4f6;
+}
+
+QLabel#page_title_label {
+    color: #111827;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+QFrame#counter_card,
+QFrame#settings_card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+}
+
+QLabel#counter_title_label {
+    color: #111827;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+QLabel#counter_description_label,
+QLabel#settings_intro_label {
+    color: #6b7280;
+}
+
+QLabel#counter_value_label {
+    color: #1f2937;
+    font-size: 36px;
+    font-weight: 600;
+}
+
+QPushButton#increment_button {
+    min-height: 36px;
+    padding: 0 20px;
+    background: #2563eb;
+    border: none;
+    border-radius: 6px;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+QPushButton#increment_button:hover {
+    background: #1d4ed8;
+}

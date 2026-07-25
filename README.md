@@ -5,6 +5,7 @@ Curated skills maintained for use with Codex.
 ## Included skills
 
 - `cross-session-workflow` — establishes durable project workflow files for work that spans multiple Codex sessions.
+- `create-pyside6-widget-project` — creates uv-managed PySide6 Widget application scaffolds with Qt Designer, lightweight MVVM pages, tests, and PyInstaller packaging.
 - `wpf-materialdesign-mvvm` — scaffolds or refactors a WPF application into a MaterialDesignInXaml MVVM shell.
 
 ## Install

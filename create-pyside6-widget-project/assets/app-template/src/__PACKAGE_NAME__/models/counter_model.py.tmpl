@@ -1,0 +1,12 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+
+@dataclass
+class CounterModel:
+    value: int = 0
+
+    def increment(self) -> int:
+        self.value += 1
+        return self.value

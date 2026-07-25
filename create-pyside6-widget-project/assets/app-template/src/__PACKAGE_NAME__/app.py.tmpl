@@ -1,0 +1,49 @@
+from __future__ import annotations
+
+import os
+import sys
+from importlib.resources import files
+
+from PySide6.QtCore import QTimer, Qt
+from PySide6.QtWidgets import QApplication
+
+from .logging_config import configure_logging
+from .models.counter_model import CounterModel
+from .services.settings_service import SettingsService
+from .viewmodels.counter_view_model import CounterViewModel
+from .views.view_dashboard_page import View_DashboardPage
+from .views.view_main_window import View_MainWindow
+from .views.view_settings_page import View_SettingsPage
+
+
+def load_stylesheet() -> str:
+    return (
+        files("__PACKAGE_NAME__")
+        .joinpath("resources", "styles", "app.qss")
+        .read_text(encoding="utf-8")
+    )
+
+
+def main() -> int:
+    configure_logging()
+    settings = SettingsService.load()
+
+    app = QApplication.instance()
+    owns_application = app is None
+    if app is None:
+        app = QApplication(sys.argv)
+    app.setApplicationName(settings.title)
+    app.setStyleSheet(load_stylesheet())
+
+    model = CounterModel(value=settings.initial_count)
+    view_model = CounterViewModel(model)
+    dashboard_page = View_DashboardPage(view_model)
+    settings_page = View_SettingsPage(settings)
+    window = View_MainWindow([dashboard_page, settings_page])
+    window.setWindowTitle(settings.title)
+    if os.environ.get("PYSIDE6_SMOKE_TEST") == "1":
+        window.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen, True)
+        QTimer.singleShot(250, app.quit)
+    window.show()
+
+    return app.exec() if owns_application else 0

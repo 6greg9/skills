@@ -1,0 +1,133 @@
+#!/usr/bin/env python3
+"""Report packaged runtime size and enforce the minimal Qt Widgets profile."""
+
+from __future__ import annotations
+
+import argparse
+from dataclasses import dataclass
+from pathlib import Path, PurePosixPath
+
+
+FORBIDDEN_QT_PREFIXES = (
+    "qt6network",
+    "qt6opengl",
+    "qt6pdf",
+    "qt6qml",
+    "qt6quick",
+    "qt6svg",
+    "qt6virtualkeyboard",
+)
+
+
+@dataclass(frozen=True)
+class AuditReport:
+    root: Path
+    total_bytes: int
+    file_count: int
+    category_bytes: dict[str, int]
+    largest_files: list[tuple[str, int]]
+    violations: list[str]
+
+
+def category_for(relative_path: str) -> str:
+    lower = relative_path.lower()
+    if "/translations/" in lower:
+        return "Qt translations"
+    if "/plugins/" in lower:
+        return "Qt plugins"
+    if "/pyside6/" in lower:
+        return "PySide6 runtime"
+    if lower.endswith(".exe"):
+        return "Executable"
+    return "Python and system runtime"
+
+
+def minimal_violation(relative_path: str) -> str | None:
+    lower = relative_path.lower()
+    filename = PurePosixPath(lower).name
+    if "/translations/" in lower:
+        return "Qt translation is not part of the minimal profile"
+    if "/plugins/" in lower and not lower.endswith("/plugins/platforms/qwindows.dll"):
+        return "extra Qt plugin is not part of the minimal profile"
+    if filename == "opengl32sw.dll" or filename == "qtnetwork.pyd":
+        return "optional Qt runtime is not part of the minimal profile"
+    if filename.startswith(FORBIDDEN_QT_PREFIXES):
+        return "optional Qt module is not part of the minimal profile"
+    if filename.endswith(".ui") or filename.endswith("_ui.py"):
+        return "Designer/generated UI source is not required at runtime"
+    return None
+
+
+def audit_package(root: Path, profile: str, largest_count: int = 12) -> AuditReport:
+    root = root.resolve()
+    if not root.is_dir():
+        raise FileNotFoundError(f"packaged runtime directory does not exist: {root}")
+    if profile not in {"minimal", "full"}:
+        raise ValueError(f"unsupported profile: {profile}")
+
+    category_bytes: dict[str, int] = {}
+    files: list[tuple[str, int]] = []
+    violations: list[str] = []
+    for path in root.rglob("*"):
+        if not path.is_file():
+            continue
+        relative = path.relative_to(root).as_posix()
+        size = path.stat().st_size
+        files.append((relative, size))
+        category = category_for(relative)
+        category_bytes[category] = category_bytes.get(category, 0) + size
+        if profile == "minimal":
+            reason = minimal_violation(relative)
+            if reason is not None:
+                violations.append(f"{relative}: {reason}")
+
+    files.sort(key=lambda item: item[1], reverse=True)
+    return AuditReport(
+        root=root,
+        total_bytes=sum(size for _, size in files),
+        file_count=len(files),
+        category_bytes=category_bytes,
+        largest_files=files[:largest_count],
+        violations=violations,
+    )
+
+
+def print_report(report: AuditReport, profile: str) -> None:
+    print(f"Package profile: {profile}")
+    print(f"Runtime root: {report.root}")
+    print(f"Total: {report.total_bytes / (1024 * 1024):.2f} MiB in {report.file_count} files")
+    for category, size in sorted(
+        report.category_bytes.items(), key=lambda item: item[1], reverse=True
+    ):
+        print(f"  {category}: {size / (1024 * 1024):.2f} MiB")
+    print("Largest files:")
+    for path, size in report.largest_files:
+        print(f"  {size / (1024 * 1024):7.2f} MiB  {path}")
+    if report.violations:
+        print("Minimal-profile violations:")
+        for violation in report.violations:
+            print(f"  {violation}")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("runtime_root", type=Path)
+    parser.add_argument("--profile", choices=("minimal", "full"), default="minimal")
+    parser.add_argument("--max-size-mib", type=float)
+    args = parser.parse_args()
+
+    try:
+        report = audit_package(args.runtime_root, args.profile)
+    except (FileNotFoundError, OSError, ValueError) as exc:
+        print(f"error: {exc}")
+        return 2
+    print_report(report, args.profile)
+
+    failed = bool(report.violations)
+    if args.max_size_mib is not None:
+        failed = failed or report.total_bytes > args.max_size_mib * 1024 * 1024
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

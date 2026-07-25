@@ -1,0 +1,54 @@
+from __future__ import annotations
+
+import importlib.util
+import sys
+from pathlib import Path
+
+import pytest
+
+
+def load_compile_ui_module():
+    app_root = Path(__file__).resolve().parents[1]
+    module_path = app_root / "scripts" / "compile_ui.py"
+    spec = importlib.util.spec_from_file_location("generated_compile_ui", module_path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_rejects_mismatched_xml_class(tmp_path) -> None:
+    compile_ui = load_compile_ui_module()
+    ui_path = tmp_path / "sample_widget.ui"
+    ui_path.write_text(
+        '<ui version="4.0"><class>WrongName</class>'
+        '<widget class="QWidget" name="SampleWidget"/></ui>',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="XML class must be SampleWidget"):
+        compile_ui.read_contract(ui_path)
+
+
+def test_rejects_view_with_wrong_root_base(tmp_path) -> None:
+    compile_ui = load_compile_ui_module()
+    ui_path = tmp_path / "sample_widget.ui"
+    ui_path.write_text(
+        '<ui version="4.0"><class>SampleWidget</class>'
+        '<widget class="QWidget" name="SampleWidget"/></ui>',
+        encoding="utf-8",
+    )
+    (tmp_path / "view_sample_widget.py").write_text(
+        "from PySide6.QtWidgets import QDialog\n"
+        "from .sample_widget_ui import Ui_SampleWidget\n\n"
+        "class View_SampleWidget(QDialog, Ui_SampleWidget):\n"
+        "    def __init__(self, parent=None):\n"
+        "        super().__init__(parent)\n"
+        "        self.setupUi(self)\n",
+        encoding="utf-8",
+    )
+
+    contract = compile_ui.read_contract(ui_path)
+    with pytest.raises(ValueError, match="bases must be"):
+        compile_ui.validate_view(contract)

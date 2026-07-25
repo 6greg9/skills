@@ -1,0 +1,14 @@
+from __future__ import annotations
+
+from __PACKAGE_NAME__.models.counter_model import CounterModel
+from __PACKAGE_NAME__.viewmodels.counter_view_model import CounterViewModel
+
+
+def test_increment_updates_value_and_emits_signal(qtbot) -> None:
+    view_model = CounterViewModel(CounterModel())
+
+    with qtbot.waitSignal(view_model.value_changed, timeout=1000) as signal:
+        view_model.increment()
+
+    assert signal.args == [1]
+    assert view_model.value == 1

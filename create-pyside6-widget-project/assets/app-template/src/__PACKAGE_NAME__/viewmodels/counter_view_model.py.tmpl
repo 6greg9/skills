@@ -1,0 +1,21 @@
+from __future__ import annotations
+
+from PySide6.QtCore import Property, QObject, Signal, Slot
+
+from ..models.counter_model import CounterModel
+
+
+class CounterViewModel(QObject):
+    value_changed = Signal(int)
+
+    def __init__(self, model: CounterModel, parent: QObject | None = None) -> None:
+        super().__init__(parent)
+        self._model = model
+
+    @Property(int, notify=value_changed)
+    def value(self) -> int:
+        return self._model.value
+
+    @Slot()
+    def increment(self) -> None:
+        self.value_changed.emit(self._model.increment())

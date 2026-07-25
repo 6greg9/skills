@@ -1,0 +1,25 @@
+from __future__ import annotations
+
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QWidget
+
+from ..viewmodels.counter_view_model import CounterViewModel
+from .dashboard_page_ui import Ui_DashboardPage
+
+
+class View_DashboardPage(QWidget, Ui_DashboardPage):
+    def __init__(
+        self,
+        view_model: CounterViewModel,
+        parent: QWidget | None = None,
+    ) -> None:
+        super().__init__(parent)
+        self.setupUi(self)
+        self._view_model = view_model
+        self.increment_button.clicked.connect(self._view_model.increment)
+        self._view_model.value_changed.connect(self._render_value)
+        self._render_value(self._view_model.value)
+
+    @Slot(int)
+    def _render_value(self, value: int) -> None:
+        self.counter_value_label.setText(str(value))

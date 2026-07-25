@@ -1,0 +1,215 @@
+#!/usr/bin/env python3
+"""Validate Qt Designer conventions and generate adjacent *_ui.py modules."""
+
+from __future__ import annotations
+
+import argparse
+import ast
+import re
+import shutil
+import subprocess
+import tempfile
+import xml.etree.ElementTree as ET
+from dataclasses import dataclass
+from pathlib import Path
+
+
+APP_ROOT = Path(__file__).resolve().parents[1]
+SOURCE_ROOT = APP_ROOT / "src"
+SUPPORTED_ROOTS = {"QMainWindow", "QWidget", "QDialog"}
+SNAKE_CASE = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
+
+
+@dataclass(frozen=True)
+class FormContract:
+    source: Path
+    stem: str
+    form_class: str
+    root_widget: str
+    generated: Path
+    view: Path
+
+
+def snake_to_pascal(value: str) -> str:
+    return "".join(part.capitalize() for part in value.split("_"))
+
+
+def package_root() -> Path:
+    candidates = [
+        path
+        for path in SOURCE_ROOT.iterdir()
+        if path.is_dir() and (path / "views").is_dir()
+    ]
+    if len(candidates) != 1:
+        raise ValueError(
+            f"expected exactly one package with a views directory under {SOURCE_ROOT}"
+        )
+    return candidates[0]
+
+
+def read_contract(ui_path: Path) -> FormContract:
+    stem = ui_path.stem
+    if not SNAKE_CASE.fullmatch(stem):
+        raise ValueError(f"UI filename must be snake_case: {ui_path.name}")
+    expected_class = snake_to_pascal(stem)
+    root = ET.parse(ui_path).getroot()
+    form_class = (root.findtext("class") or "").strip()
+    widget = root.find("widget")
+    if widget is None:
+        raise ValueError(f"UI has no root widget: {ui_path}")
+    root_widget = widget.attrib.get("class", "")
+    object_name = widget.attrib.get("name", "")
+    if form_class != expected_class:
+        raise ValueError(
+            f"{ui_path.name}: XML class must be {expected_class}, got {form_class!r}"
+        )
+    if object_name != expected_class:
+        raise ValueError(
+            f"{ui_path.name}: root object name must be {expected_class}, got {object_name!r}"
+        )
+    if root_widget not in SUPPORTED_ROOTS:
+        raise ValueError(
+            f"{ui_path.name}: root widget must be one of {sorted(SUPPORTED_ROOTS)}"
+        )
+    return FormContract(
+        source=ui_path,
+        stem=stem,
+        form_class=form_class,
+        root_widget=root_widget,
+        generated=ui_path.with_name(f"{stem}_ui.py"),
+        view=ui_path.with_name(f"view_{stem}.py"),
+    )
+
+
+def base_name(node: ast.expr) -> str | None:
+    return node.id if isinstance(node, ast.Name) else None
+
+
+def validate_view(contract: FormContract) -> None:
+    if not contract.view.is_file():
+        raise ValueError(f"missing hand-written View module: {contract.view}")
+    tree = ast.parse(contract.view.read_text(encoding="utf-8"), filename=str(contract.view))
+    ui_class = f"Ui_{contract.form_class}"
+    view_class = f"View_{contract.form_class}"
+    expected_module = f"{contract.stem}_ui"
+
+    imported = any(
+        isinstance(node, ast.ImportFrom)
+        and node.level == 1
+        and node.module == expected_module
+        and any(alias.name == ui_class for alias in node.names)
+        for node in tree.body
+    )
+    if not imported:
+        raise ValueError(
+            f"{contract.view.name}: expected 'from .{expected_module} import {ui_class}'"
+        )
+
+    classes = [
+        node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == view_class
+    ]
+    if len(classes) != 1:
+        raise ValueError(f"{contract.view.name}: expected one class named {view_class}")
+    class_node = classes[0]
+    bases = [base_name(base) for base in class_node.bases]
+    expected_bases = [contract.root_widget, ui_class]
+    if bases != expected_bases:
+        raise ValueError(
+            f"{contract.view.name}: bases must be {expected_bases}, got {bases}"
+        )
+
+    init_methods = [
+        node
+        for node in class_node.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "__init__"
+    ]
+    if len(init_methods) != 1:
+        raise ValueError(f"{contract.view.name}: {view_class} must define __init__")
+
+    super_line: int | None = None
+    setup_line: int | None = None
+    for node in ast.walk(init_methods[0]):
+        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+            continue
+        if (
+            node.func.attr == "__init__"
+            and isinstance(node.func.value, ast.Call)
+            and isinstance(node.func.value.func, ast.Name)
+            and node.func.value.func.id == "super"
+        ):
+            super_line = node.lineno
+        if (
+            node.func.attr == "setupUi"
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id == "self"
+            and len(node.args) == 1
+            and isinstance(node.args[0], ast.Name)
+            and node.args[0].id == "self"
+        ):
+            setup_line = node.lineno
+    if super_line is None or setup_line is None or super_line >= setup_line:
+        raise ValueError(
+            f"{contract.view.name}: call super().__init__(parent) before self.setupUi(self)"
+        )
+
+
+def validate_generated(contract: FormContract) -> None:
+    if not contract.generated.is_file():
+        raise ValueError(f"generated UI module is missing: {contract.generated}")
+    tree = ast.parse(
+        contract.generated.read_text(encoding="utf-8"), filename=str(contract.generated)
+    )
+    expected = f"Ui_{contract.form_class}"
+    if not any(isinstance(node, ast.ClassDef) and node.name == expected for node in tree.body):
+        raise ValueError(f"{contract.generated.name}: missing generated class {expected}")
+
+
+def compile_form(contract: FormContract, uic: str) -> None:
+    with tempfile.NamedTemporaryFile(
+        prefix=f".{contract.generated.stem}-",
+        suffix=".py",
+        dir=contract.generated.parent,
+        delete=False,
+    ) as handle:
+        temporary = Path(handle.name)
+    try:
+        subprocess.run(
+            [uic, str(contract.source), "-o", str(temporary)],
+            check=True,
+        )
+        temporary.replace(contract.generated)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="validate existing generated modules without running pyside6-uic",
+    )
+    args = parser.parse_args()
+
+    views_root = package_root() / "views"
+    ui_files = sorted(views_root.glob("*.ui"))
+    if not ui_files:
+        raise ValueError(f"no .ui files found under {views_root}")
+
+    uic = None if args.check else shutil.which("pyside6-uic")
+    if not args.check and uic is None:
+        raise RuntimeError("pyside6-uic is not available; run this script through uv run")
+
+    for ui_path in ui_files:
+        contract = read_contract(ui_path)
+        validate_view(contract)
+        if uic is not None:
+            compile_form(contract, uic)
+        validate_generated(contract)
+        action = "Checked" if args.check else "Generated"
+        print(f"{action} {contract.generated.relative_to(APP_ROOT)}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

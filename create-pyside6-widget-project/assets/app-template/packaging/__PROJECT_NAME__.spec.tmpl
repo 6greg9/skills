@@ -1,0 +1,98 @@
+# -*- mode: python ; coding: utf-8 -*-
+
+import os
+from pathlib import Path, PurePosixPath
+
+
+app_root = Path(SPECPATH).parent
+source_root = app_root / "src"
+package_root = source_root / "__PACKAGE_NAME__"
+profile = os.environ.get("PYSIDE6_PACKAGE_PROFILE", "minimal").lower()
+if profile not in {"minimal", "full"}:
+    raise ValueError(f"Unsupported PYSIDE6_PACKAGE_PROFILE: {profile}")
+
+minimal_excludes = [
+    "PySide6.QtNetwork",
+    "PySide6.QtOpenGL",
+    "PySide6.QtPdf",
+    "PySide6.QtQml",
+    "PySide6.QtQuick",
+    "PySide6.QtSvg",
+    "PySide6.QtVirtualKeyboard",
+]
+
+datas = [
+    (str(package_root / "config"), "__PACKAGE_NAME__/config"),
+    (str(package_root / "resources"), "__PACKAGE_NAME__/resources"),
+]
+
+a = Analysis(
+    [str(app_root / "run_app.py")],
+    pathex=[str(source_root)],
+    binaries=[],
+    datas=datas,
+    hiddenimports=[],
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=minimal_excludes if profile == "minimal" else [],
+    noarchive=False,
+    optimize=0,
+)
+
+
+def minimal_runtime_entry(entry):
+    destination = entry[0].replace("\\", "/")
+    lower_destination = destination.lower()
+    filename = PurePosixPath(lower_destination).name
+
+    if "/translations/" in lower_destination:
+        return False
+    if "/plugins/" in lower_destination:
+        return lower_destination.endswith("/plugins/platforms/qwindows.dll")
+    if filename == "opengl32sw.dll" or filename == "qtnetwork.pyd":
+        return False
+    forbidden_qt_prefixes = (
+        "qt6network",
+        "qt6opengl",
+        "qt6pdf",
+        "qt6qml",
+        "qt6quick",
+        "qt6svg",
+        "qt6virtualkeyboard",
+    )
+    return not filename.startswith(forbidden_qt_prefixes)
+
+
+if profile == "minimal":
+    a.binaries = [entry for entry in a.binaries if minimal_runtime_entry(entry)]
+    a.datas = [entry for entry in a.datas if minimal_runtime_entry(entry)]
+
+print(f"PySide6 packaging profile: {profile}")
+pyz = PYZ(a.pure)
+
+exe = EXE(
+    pyz,
+    a.scripts,
+    [],
+    exclude_binaries=True,
+    name="__PROJECT_NAME__",
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=False,
+    console=False,
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+)
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=False,
+    name="__PROJECT_NAME__",
+)
