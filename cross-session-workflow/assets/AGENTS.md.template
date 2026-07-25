@@ -1,0 +1,23 @@
+# Project Collaboration Guidance
+
+Follow the user's current instructions first.
+
+## Start of every session
+
+1. Read this file, then `README.md`, `PLAN.md`, and `PROGRESS.md`.
+2. Read the ADRs in `docs/decisions/` that are relevant to the requested work.
+3. Inspect the current working tree and preserve unrelated user changes.
+
+## Document responsibilities
+
+- `PLAN.md` contains the active goal, milestones, scope, and acceptance criteria.
+- `PROGRESS.md` is the rolling cross-session handoff.
+- `docs/decisions/` contains append-only Architecture Decision Records (ADRs).
+
+## Before ending a meaningful work unit
+
+1. Run verification appropriate to the change.
+2. Update `PROGRESS.md` with completed work, current state, next action, blockers, and verification results.
+3. Update `PLAN.md` if milestone or scope status changed.
+4. Add an ADR for a material, long-lived decision; do not rewrite an adopted ADR.
+

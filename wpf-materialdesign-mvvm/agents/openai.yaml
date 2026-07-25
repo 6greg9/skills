@@ -1,0 +1,4 @@
+interface:
+  display_name: "WPF MaterialDesign MVVM"
+  short_description: "Scaffold a WPF MaterialDesignXaml MVVM shell."
+  default_prompt: "Use $wpf-materialdesign-mvvm to scaffold a WPF MaterialDesignXaml MVVM shell with DI and page navigation."

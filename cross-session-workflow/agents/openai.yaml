@@ -1,0 +1,4 @@
+interface:
+  display_name: "跨 Session 工作流程"
+  short_description: "建立及維護可跨多個 Codex session 延續的專案交接架構"
+  default_prompt: "Use $cross-session-workflow to establish durable cross-session project handoffs."
