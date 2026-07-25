@@ -8,6 +8,7 @@ Curated skills maintained for use with Codex.
 - `create-pyside6-widget-project` — creates uv-managed PySide6 Widget application scaffolds with Qt Designer, lightweight MVVM pages, tests, and PyInstaller packaging.
 - `wpf-design-taste` — guides polished, non-generic WPF interface design, redesign, theming, and visual verification.
 - `wpf-materialdesign-mvvm` — scaffolds or refactors a WPF application into a MaterialDesignInXaml MVVM shell.
+- `wpf-minimalist-ui` — designs restrained, editorial, information-first WPF interfaces with minimal visual chrome.
 
 ## Install
 

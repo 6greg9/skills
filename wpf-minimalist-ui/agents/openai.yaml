@@ -1,0 +1,4 @@
+interface:
+  display_name: "WPF Minimalist UI"
+  short_description: "Design quiet, editorial WPF desktop interfaces."
+  default_prompt: "Use $wpf-minimalist-ui to design this WPF screen with a restrained monochrome system, precise spacing, and complete interaction states."
