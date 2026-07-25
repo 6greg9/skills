@@ -1,0 +1,4 @@
+interface:
+  display_name: "WPF Design Taste"
+  short_description: "Design polished, non-generic WPF interfaces."
+  default_prompt: "Use $wpf-design-taste to design or refine this WPF interface with a clear visual system and complete interaction states."
