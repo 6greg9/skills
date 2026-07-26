@@ -6,6 +6,7 @@ Curated skills maintained for use with Codex.
 
 - `cross-session-workflow` — establishes durable project workflow files for work that spans multiple Codex sessions.
 - `create-pyside6-widget-project` — creates uv-managed PySide6 Widget application scaffolds with Qt Designer, lightweight MVVM pages, tests, and PyInstaller packaging.
+- `precision-imaging-controls` — designs precise, cross-platform imaging interaction, measurement, annotation, ROI, rendering, and input controls.
 - `wpf-design-taste` — guides polished, non-generic WPF interface design, redesign, theming, and visual verification.
 - `wpf-materialdesign-mvvm` — scaffolds or refactors a WPF application into a MaterialDesignInXaml MVVM shell.
 
