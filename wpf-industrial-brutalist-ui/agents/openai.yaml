@@ -1,0 +1,4 @@
+interface:
+  display_name: "WPF Industrial Brutalist UI"
+  short_description: "Design rigid, tactical WPF desktop interfaces."
+  default_prompt: "Use $wpf-industrial-brutalist-ui to design this WPF screen as a rigid industrial or tactical interface with functional high-contrast data presentation."
