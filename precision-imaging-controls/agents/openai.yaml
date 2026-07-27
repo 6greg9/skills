@@ -1,0 +1,4 @@
+interface:
+  display_name: "Precision Imaging Controls｜精密影像互動控件"
+  short_description: "Design precise imaging editors and optional measurement"
+  default_prompt: "Use $precision-imaging-controls to design a precise, testable imaging viewport and annotation workflow, adding calibrated measurement only when required."
