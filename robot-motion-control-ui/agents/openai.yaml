@@ -1,0 +1,4 @@
+interface:
+  display_name: "Robot Motion Control UI"
+  short_description: "Design safe, explicit robot motion control interfaces"
+  default_prompt: "Use $robot-motion-control-ui to design or review a safe, testable robot motion control interface."
