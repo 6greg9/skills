@@ -1,0 +1,4 @@
+interface:
+  display_name: "Signal Waveform Controls｜訊號波形互動控件"
+  short_description: "Design precise streaming waveform interactions"
+  default_prompt: "Use $signal-waveform-controls to design a precise, high-performance waveform viewer and measurement workflow."
