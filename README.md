@@ -7,6 +7,7 @@ Curated skills maintained for use with Codex.
 - `cross-session-workflow` — establishes durable project workflow files for work that spans multiple Codex sessions.
 - `create-pyside6-widget-project` — creates uv-managed PySide6 Widget application scaffolds with Qt Designer, lightweight MVVM pages, tests, and PyInstaller packaging.
 - `robot-motion-control-ui` — designs explicit, testable robot motion controls for frames, jogging, command lifecycles, telemetry, and safety-state presentation.
+- `signal-waveform-controls` — designs faithful live and historical waveform interaction, triggering, measurement, spectrum analysis, and high-rate rendering.
 - `precision-imaging-controls` — designs precise, cross-platform imaging interaction, measurement, annotation, ROI, rendering, and input controls.
 - `wpf-design-taste` — guides polished, non-generic WPF interface design, redesign, theming, and visual verification.
 - `wpf-industrial-brutalist-ui` — designs rigid, high-contrast WPF interfaces for engineering tools, workstations, and telemetry.
