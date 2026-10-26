@@ -23,6 +23,7 @@ These skills were written for Claude (Claude Code and claude.ai). They have a `S
 - `go-templ-htmx` — conventions for server-rendered Go web UIs with net/http, templ, and htmx 2.x.
 - `fastapi-htmx-jinja` — conventions for server-rendered FastAPI web UIs with Jinja2, jinja2-fragments, and htmx 2.x.
 - `industrial-hmi-style-guide` — reference for industrial and semiconductor equipment HMI screens: ISA-101, ISA-18.2, and SEMI E90/E84 status conventions.
+- `html-drawio-wireframe` — low-fidelity wireframes as one HTML file per screen (mobile and desktop, every state, numbered notes), checked by script and exported to draw.io, with annotations read back from draw.io.
 
 ## Install
 

@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>001 Article search</title>
+<!--
+WIREFRAME TEMPLATE: authoring rules
+===================================
+This file is the source of truth for one screen. It opens directly in a browser; the
+toolbar switches state, size and notes. scripts/check_wireframe.py checks the rules
+below. scripts/wireframe2drawio.py exports it to draw.io by measuring the layout.
+
+What you edit (replace the example completely):
+  <title>, #toolbar-title, <template id="screen">, <style id="screen-style">,
+  #notes and <body data-states>.
+What you leave alone: #base-style and #base-script. The checker and the exporter call
+window.WF (states, sizes, frame(), setState(), setSize(), setNotes()).
+
+Rules
+ 1. Real tags. Use button, input, select, textarea, nav, header, main, section, article,
+    form, table, ul/ol/li, h1-h3, p, label, a, small. No div/span that behaves like a control
+    (no onclick, role, tabindex). The exporter maps tags to draw.io shapes.
+ 2. Class kit only, plus layout-only classes you define in #screen-style:
+      row col grow wrap gap-1 gap-2 gap-3 pad-1 pad-2 pad-3 center between end
+      box img icon skel chip primary muted strong mobile-only desktop-only
+    Layout-only means display, flex, grid, gap, align, justify, order, width, height,
+    min/max sizes, padding, margin, overflow, aspect-ratio, text-align, white-space.
+    No colour, border, background, font or shadow in #screen-style.
+    Show control state with attributes, not classes: aria-pressed / aria-current /
+    aria-selected="true" (selected), disabled, checked, value or placeholder.
+    Mark the one main action with class "primary".
+ 3. Text only in leaf elements. An element holds text or child elements, never both
+    (<br> is fine). Wrap loose text in <span>, <p> or <small>.
+ 4. No position:absolute/fixed/sticky, no transform, no background images, no inline
+    style, no <img>/<svg>/<canvas>/<video>/<iframe>, no scripts or on* handlers.
+    Use class "img" for pictures and class "icon" for icons.
+ 5. Sizes: @container only, with the 640px breakpoint. Below 640px is "mobile", from
+    640px up is "desktop". Use mobile-only / desktop-only to swap whole blocks. Never use
+    @media, :hover, :focus or :checked; the exporter can only see what is in the markup.
+ 6. States: data-when="ready" or data-when="loading error" (any of) or data-when="!ready"
+    (anything but). Every state in <body data-states> must change something visible.
+ 7. data-id on every meaningful block: kebab-case, unique in the whole template. It is the
+    draw.io cell id and the name used in feedback ("move result-bar up"). Required on the
+    root, landmarks (main header footer nav aside section article form table ul ol) and
+    advised on controls and .box.
+ 8. Notes: data-note="1" (or "1 3") on the element, and <li data-note="1"> in #notes.
+    Mark open questions with data-kind="question" and assumptions with data-kind="assumption".
+ 9. Realistic data. Longest plausible title, missing fields, zero items, many items.
+    Tidy placeholder text hides layout problems.
+-->
+<style id="base-style">
+:root{--ink:#222;--muted:#767676;--line:#9a9a9a;--soft:#efefef;--paper:#fff;--mark:#d4380d}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.4 Helvetica,Arial,"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif;color:var(--ink);background:#e9e9e9}
+
+/* chrome: toolbar, frames, notes list (never exported) */
+#toolbar{position:sticky;top:0;z-index:10;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;padding:8px 16px;background:#222;color:#fff}
+#toolbar h1{margin:0;font-size:15px;font-weight:600}
+#toolbar .tb-group{display:flex;gap:4px;align-items:center}
+#toolbar button{font:inherit;font-size:13px;color:#fff;background:transparent;border:1px solid #777;border-radius:3px;padding:3px 10px;cursor:pointer}
+#toolbar button[aria-pressed="true"]{background:#fff;color:#222;border-color:#fff}
+#toolbar label{font-size:13px;display:flex;gap:6px;align-items:center;cursor:pointer}
+#stage{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start;padding:24px 16px}
+.frame[hidden]{display:none}
+.frame-title{margin:0 0 6px;font-size:12px;font-weight:600;color:#555}
+.screen-wrap{position:relative}
+.screen{container-type:inline-size;background:var(--paper);box-shadow:0 0 0 1px var(--line);pointer-events:none}
+.badges{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none}
+.note-badge{position:absolute;display:flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--mark);color:#fff;font:700 11px/1 system-ui,sans-serif}
+body.notes-off .badges,body.notes-off #notes{display:none}
+#notes{list-style:none;margin:0;padding:0 16px 32px;max-width:900px}
+#notes li{display:flex;gap:10px;padding:6px 0;border-top:1px solid #ccc;font-size:13px}
+#notes li::before{content:attr(data-note);flex:none;width:18px;height:18px;border-radius:50%;background:var(--mark);color:#fff;font:700 11px/18px system-ui,sans-serif;text-align:center}
+#notes li[data-kind="question"]::after{content:"open question";order:-1;flex:none;font-size:11px;color:var(--mark);border:1px solid var(--mark);border-radius:3px;padding:0 5px;height:18px}
+#notes li[data-kind="assumption"]::after{content:"assumption";order:-1;flex:none;font-size:11px;color:#555;border:1px solid #888;border-radius:3px;padding:0 5px;height:18px}
+
+/* wireframe defaults: zero specificity so the class kit and your classes always win */
+:where(.screen){font-size:14px;line-height:1.4}
+:where(.screen) h1{font-size:22px;margin:0}
+:where(.screen) h2{font-size:18px;margin:0}
+:where(.screen) h3{font-size:16px;margin:0}
+:where(.screen) p{margin:0}
+:where(.screen) small{font-size:12px}
+:where(.screen) a{color:var(--ink);text-decoration:underline}
+:where(.screen) > * > header{border-bottom:1px solid var(--line)}
+:where(.screen) ul,:where(.screen) ol{list-style:none;margin:0;padding:0}
+:where(.screen) hr{border:0;border-top:1px solid var(--line);margin:0;width:100%}
+:where(.screen) button{font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:4px;padding:6px 12px;min-height:32px}
+:where(.screen) button[aria-pressed="true"],:where(.screen) button[aria-current="true"],:where(.screen) button[aria-selected="true"]{background:#333;color:#fff;border-color:#333}
+:where(.screen) button:disabled{color:#aaa;background:var(--soft)}
+:where(.screen) input,:where(.screen) select,:where(.screen) textarea{font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:2px;padding:6px 8px;min-height:32px;min-width:0}
+:where(.screen) textarea{min-height:72px}
+:where(.screen) input[type="checkbox"],:where(.screen) input[type="radio"]{width:16px;height:16px;min-height:0;padding:0;margin:0}
+:where(.screen) table{border-collapse:collapse}
+:where(.screen) th,:where(.screen) td{border:1px solid var(--line);padding:6px 10px;text-align:left}
+:where(.screen) th{font-weight:700;background:var(--soft)}
+
+/* class kit */
+.row{display:flex;flex-direction:row;align-items:center}
+.col{display:flex;flex-direction:column}
+.grow{flex:1 1 0;min-width:0}
+.wrap{flex-wrap:wrap}
+.gap-1{gap:4px}.gap-2{gap:8px}.gap-3{gap:16px}
+.pad-1{padding:4px}.pad-2{padding:8px}.pad-3{padding:16px}
+.center{align-items:center;justify-content:center;text-align:center}
+.between{justify-content:space-between}
+.end{justify-content:flex-end}
+.box{border:1px solid var(--line)}
+.primary{background:#333;color:#fff;border-color:#333;font-weight:700}
+.muted{color:var(--muted)}
+.strong{font-weight:700}
+.img{background:var(--soft);border:1px solid var(--line);min-width:24px;min-height:24px}
+.icon{flex:none;width:16px;height:16px;border-radius:50%;background:#ccc;border:1px solid var(--line)}
+.skel{height:12px;border-radius:6px;background:#e2e2e2}
+.chip{display:inline-flex;align-items:center;min-height:0;padding:2px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:12px;line-height:1.4}
+@container (max-width: 639.98px){.desktop-only{display:none !important}}
+@container (min-width: 640px){.mobile-only{display:none !important}}
+.screen [hidden]{display:none !important}
+</style>
+<style id="screen-style">
+/* layout-only classes for this screen (see rule 2) */
+.page{min-height:560px}
+.content{display:flex;flex-direction:column;gap:12px;padding:12px 16px 24px}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.results{display:flex;flex-direction:column;gap:12px}
+.cards{display:flex;flex-direction:column;gap:12px}
+.card{display:flex;gap:12px;padding:12px}
+.thumb{flex:none;width:80px;height:60px}
+.state-box{display:flex;flex-direction:column;align-items:center;gap:8px;padding:32px 16px;text-align:center}
+.state-box p{max-width:320px}
+.search-input{flex:1 1 0;min-width:0}
+.sort{width:140px}
+@container (min-width: 640px){
+  .content{flex-direction:row;align-items:flex-start;gap:24px;padding:16px 24px 32px}
+  .tags{flex-direction:column;flex-wrap:nowrap;flex:none;width:180px;gap:6px}
+  .tags .chip{justify-content:flex-start}
+  .results{flex:1 1 0;min-width:0}
+  .thumb{width:128px;height:96px}
+}
+</style>
+</head>
+<body data-states="ready loading empty error">
+<header id="toolbar">
+  <h1 id="toolbar-title">001 · Article search</h1>
+  <div class="tb-group" id="tb-states" role="group" aria-label="State"></div>
+  <div class="tb-group" id="tb-sizes" role="group" aria-label="Size"></div>
+  <label><input type="checkbox" id="tb-notes" checked> Notes</label>
+</header>
+<main id="stage"></main>
+<ol id="notes">
+  <li data-note="1" data-kind="assumption">The tag filter is one component: a wrapping row of chips on mobile, a sidebar column on desktop.</li>
+  <li data-note="2" data-kind="question">Can several tags be selected at once? The wireframe assumes one tag at a time.</li>
+  <li data-note="3" data-kind="question">Mobile loads more results with a button; desktop uses numbered pages. Confirm both, or pick one.</li>
+  <li data-note="4" data-kind="assumption">"Clear filters" only appears when a keyword or tag is active, so it is always useful.</li>
+</ol>
+
+<template id="screen">
+  <main class="col page" data-id="search-page">
+    <header class="row between pad-2" data-id="page-header">
+      <strong data-id="logo">DevNotes</strong>
+      <nav class="row gap-3 desktop-only" data-id="top-nav">
+        <a href="#">Articles</a>
+        <a href="#">Tags</a>
+        <a href="#">About</a>
+      </nav>
+      <button class="mobile-only" data-id="menu-button">Menu</button>
+    </header>
+
+    <form class="row gap-2 pad-3" role="search" data-id="search-box">
+      <input class="search-input" type="search" value="locking" data-id="search-input">
+      <button class="primary" data-id="search-submit">Search</button>
+    </form>
+
+    <div class="content" data-id="search-body">
+      <nav class="tags" aria-label="Tags" data-id="tag-filter" data-note="1 2">
+        <button class="chip" data-id="tag-all" aria-pressed="true">All</button>
+        <button class="chip" data-id="tag-databases">databases</button>
+        <button class="chip" data-id="tag-distributed-systems">distributed-systems</button>
+        <button class="chip" data-id="tag-performance">performance</button>
+        <button class="chip" data-id="tag-testing">testing</button>
+      </nav>
+
+      <section class="results" data-id="result-list">
+        <div class="row between gap-2" data-id="result-bar" data-when="!error">
+          <span data-id="result-count-ready" data-when="ready">128 results for "locking"</span>
+          <span class="muted" data-id="result-count-loading" data-when="loading">Searching…</span>
+          <span data-id="result-count-empty" data-when="empty">0 results for "locking"</span>
+          <select class="sort" aria-label="Sort" data-id="sort-select" data-when="ready">
+            <option>Newest first</option>
+            <option>Most read</option>
+          </select>
+        </div>
+
+        <ul class="cards" data-id="post-list" data-when="ready">
+          <li>
+            <article class="box card" data-id="post-card-1">
+              <div class="img thumb"></div>
+              <div class="col grow gap-1">
+                <h3>Optimistic vs pessimistic locking</h3>
+                <p class="muted">When a version column beats a row lock, and when it does not.</p>
+                <div class="row wrap gap-1">
+                  <span class="chip">databases</span>
+                  <small class="muted">6 min read</small>
+                </div>
+              </div>
+            </article>
+          </li>
+          <li>
+            <article class="box card" data-id="post-card-2" data-note="3">
+              <div class="img thumb"></div>
+              <div class="col grow gap-1">
+                <h3>Why our distributed lock service lost a lease during a garbage collection pause, and the fencing token that would have saved us</h3>
+                <p class="muted">A post-mortem of a three-hour incident. The lock holder paused for 41 seconds, its lease expired, and a second client wrote to the same file while the first one was still sure it held the lock.</p>
+                <div class="row wrap gap-1">
+                  <span class="chip">distributed-systems</span>
+                  <span class="chip">databases</span>
+                  <span class="chip">performance</span>
+                  <small class="muted">19 min read</small>
+                </div>
+              </div>
+            </article>
+          </li>
+          <li>
+            <article class="box card" data-id="post-card-3">
+              <div class="col grow gap-1">
+                <h3>Notes on lock contention</h3>
+                <small class="muted">Author unknown</small>
+              </div>
+            </article>
+          </li>
+          <li>
+            <article class="box card" data-id="post-card-4">
+              <div class="img thumb"></div>
+              <div class="col grow gap-1">
+                <h3>Testing code that takes locks</h3>
+                <p class="muted">Deterministic schedules for a flaky test.</p>
+              </div>
+            </article>
+          </li>
+        </ul>
+
+        <ul class="cards" data-id="post-skeleton" data-when="loading">
+          <li><div class="box card" data-id="skeleton-card-1"><div class="skel thumb"></div><div class="col grow gap-2"><div class="skel"></div><div class="skel"></div></div></div></li>
+          <li><div class="box card" data-id="skeleton-card-2"><div class="skel thumb"></div><div class="col grow gap-2"><div class="skel"></div><div class="skel"></div></div></div></li>
+          <li><div class="box card" data-id="skeleton-card-3"><div class="skel thumb"></div><div class="col grow gap-2"><div class="skel"></div><div class="skel"></div></div></div></li>
+        </ul>
+
+        <div class="box state-box" data-id="empty-state" data-when="empty" data-note="4">
+          <div class="img thumb"></div>
+          <h3>No articles match "locking"</h3>
+          <p class="muted">Try another keyword, or remove the tag filter to see everything.</p>
+          <button data-id="clear-filters">Clear filters</button>
+        </div>
+
+        <div class="box state-box" data-id="error-state" data-when="error">
+          <div class="icon"></div>
+          <h3>We could not load the articles</h3>
+          <p class="muted">The search service did not answer. Check your connection and try again.</p>
+          <button data-id="retry-button">Retry</button>
+        </div>
+
+        <button class="mobile-only" data-id="load-more" data-when="ready">Load more (124 left)</button>
+        <nav class="row center gap-1 desktop-only" aria-label="Pages" data-id="pager" data-when="ready">
+          <button data-id="page-prev" disabled>Prev</button>
+          <button data-id="page-1" aria-current="true">1</button>
+          <button data-id="page-2">2</button>
+          <button data-id="page-3">3</button>
+          <button data-id="page-next">Next</button>
+        </nav>
+      </section>
+    </div>
+  </main>
+</template>
+
+<script id="base-script">
+(() => {
+  "use strict";
+  const SIZES = { mobile: 375, desktop: 1024 };
+  const STATES = (document.body.dataset.states || "ready").split(/\s+/).filter(Boolean);
+  const tpl = document.getElementById("screen");
+  const stage = document.getElementById("stage");
+  const tbStates = document.getElementById("tb-states");
+  const tbSizes = document.getElementById("tb-sizes");
+  const tbNotes = document.getElementById("tb-notes");
+  const frames = {};
+  let state = STATES[0];
+  let size = "both";
+  let notes = true;
+
+  function applyState(screen, s) {
+    screen.dataset.state = s;
+    screen.querySelectorAll("[data-when]").forEach((el) => {
+      const tokens = el.dataset.when.split(/\s+/).filter(Boolean);
+      el.hidden = !tokens.some((t) => (t[0] === "!" ? t.slice(1) !== s : t === s));
+    });
+  }
+
+  function drawBadges(name) {
+    const f = frames[name];
+    f.badges.textContent = "";
+    const box = f.screen.getBoundingClientRect();
+    f.screen.querySelectorAll("[data-note]").forEach((el) => {
+      if (el.closest("[hidden]")) return;
+      const r = el.getBoundingClientRect();
+      if (!r.width && !r.height) return;
+      el.dataset.note.split(/\s+/).filter(Boolean).forEach((n, i) => {
+        const b = document.createElement("span");
+        b.className = "note-badge";
+        b.textContent = n;
+        b.style.left = r.left - box.left - 9 + i * 20 + "px";
+        b.style.top = r.top - box.top - 9 + "px";
+        f.badges.appendChild(b);
+      });
+    });
+  }
+
+  function refresh() {
+    Object.keys(frames).forEach((name) => {
+      const f = frames[name];
+      f.root.hidden = !(size === "both" || size === name);
+      f.label.textContent = name + " · " + SIZES[name] + "px · " + state;
+      applyState(f.screen, state);
+    });
+    Object.keys(frames).forEach(drawBadges);
+    document.body.classList.toggle("notes-off", !notes);
+    tbNotes.checked = notes;
+    tbStates.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.value === state)));
+    tbSizes.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.value === size)));
+    try {
+      history.replaceState(null, "", "#state=" + state + "&size=" + size + "&notes=" + (notes ? 1 : 0));
+    } catch (e) { /* file:// in some browsers */ }
+  }
+
+  function build() {
+    Object.keys(SIZES).forEach((name) => {
+      const root = document.createElement("section");
+      root.className = "frame";
+      root.dataset.size = name;
+      const label = document.createElement("h2");
+      label.className = "frame-title";
+      const wrap = document.createElement("div");
+      wrap.className = "screen-wrap";
+      const screen = document.createElement("div");
+      screen.className = "screen";
+      screen.style.width = SIZES[name] + "px";
+      screen.appendChild(tpl.content.cloneNode(true));
+      const badges = document.createElement("div");
+      badges.className = "badges";
+      wrap.append(screen, badges);
+      root.append(label, wrap);
+      stage.appendChild(root);
+      frames[name] = { root, label, screen, badges };
+    });
+    STATES.forEach((s) => tbStates.appendChild(button(s, s, () => WF.setState(s))));
+    ["mobile", "desktop", "both"].forEach((s) => tbSizes.appendChild(button(s, s, () => WF.setSize(s))));
+    tbNotes.addEventListener("change", () => WF.setNotes(tbNotes.checked));
+  }
+
+  function button(text, value, fn) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = text;
+    b.dataset.value = value;
+    b.addEventListener("click", fn);
+    return b;
+  }
+
+  window.WF = {
+    ready: false,
+    states: STATES,
+    sizes: SIZES,
+    frame(name) { return frames[name].screen; },
+    setState(s) {
+      if (STATES.indexOf(s) < 0) throw new Error("unknown state: " + s);
+      state = s;
+      refresh();
+    },
+    setSize(s) { size = s; refresh(); },
+    setNotes(on) { notes = !!on; refresh(); },
+    refresh,
+  };
+
+  build();
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (STATES.indexOf(h.get("state")) >= 0) state = h.get("state");
+  if (["mobile", "desktop", "both"].indexOf(h.get("size")) >= 0) size = h.get("size");
+  if (h.get("notes") === "0") notes = false;
+  refresh();
+  WF.ready = true;
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(refresh);
+  window.addEventListener("resize", refresh);
+})();
+</script>
+</body>
+</html>
