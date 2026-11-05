@@ -9,7 +9,7 @@ Worth it when the VM needs time or combination logic: `combine_latest`, `debounc
 | VM property with current value | `BehaviorSubject(initial)` |
 | Event / command stream | `Subject()` |
 | Derived state from several signals | `rx.combine_latest(a, b).pipe(ops.map(...))` |
-| Throttle high-rate PLC values for display | `ops.throttle_first(0.2)` or `ops.sample(0.2)` |
+| Throttle high-rate sensor or device values for display | `ops.throttle_first(0.2)` or `ops.sample(0.2)` |
 | Suppress redundant UI updates | `ops.distinct_until_changed()` |
 | Deliver on the Tk thread | subscribe and forward through `UiDispatcher.post` (see caveat) |
 | Single-thread asyncio design | `AsyncIOScheduler(loop)` from `reactivex.scheduler.eventloop` |

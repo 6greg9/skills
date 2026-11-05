@@ -1,9 +1,9 @@
 """Render a screen's preview scenarios to PNG files for visual review.
 
 Usage:
-    python tools/snap_view.py app.screens.loadport [--sizes 800x480,1280x800] [--out shots]
+    python tools/snap_view.py app.screens.connection [--sizes 800x480,1280x800] [--out shots]
 Linux/CI (headless):
-    xvfb-run -a -s "-screen 0 1920x1080x24" python tools/snap_view.py app.screens.loadport
+    xvfb-run -a -s "-screen 0 1920x1080x24" python tools/snap_view.py app.screens.connection
 
 Contract: the screen module defines
     def preview(master, ui) -> tuple[tk.Widget, dict[str, Callable[[], None]]]

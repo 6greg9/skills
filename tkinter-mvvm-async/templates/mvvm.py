@@ -30,7 +30,7 @@ class UiDispatcher:
     """Runs callables on the Tk thread: a queue drained by an `after` pump.
 
     Create it on the Tk thread. `post` / `post_latest` are safe from any thread.
-    `post_latest` coalesces high-frequency updates, so a 10 ms PLC poll doesn't flood the UI.
+    `post_latest` coalesces high-frequency updates, so a 10 ms device poll doesn't flood the UI.
     Within one pump, coalesced calls run before queued `post` calls.
     """
 
@@ -116,7 +116,7 @@ def bind_enabled(w: ttk.Widget, obs: Observable[bool], ui: UiDispatcher):
 
 
 def bind_style(w: ttk.Widget, obs: Observable, ui: UiDispatcher, style_for: Callable[[Any], str]):
-    """State -> ttk style name, e.g. style_for=lambda s: E90_STATE_STYLE.get(s, "StateIdle.TLabel")."""
+    """State -> ttk style name, e.g. style_for=lambda s: STATE_STYLE.get(s, "StateIdle.TLabel")."""
     return obs.subscribe(lambda v: ui.post(w.configure, style=style_for(v)))
 
 
