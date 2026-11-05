@@ -1,9 +1,9 @@
-"""Model B: an asyncio loop on its own thread for PLC / SECS / E84 I/O. No tkinter in here.
+"""Model B: an asyncio loop on its own thread for device, serial or network I/O. No tkinter in here.
 
 Copy to app/comms_runtime.py.
 
     runtime = CommsRuntime(); runtime.start()
-    fut = runtime.submit(plc.read_status())                 # from the Tk thread
+    fut = runtime.submit(client.read_status())              # from the Tk thread
     fut.add_done_callback(lambda f: ui.post(show, f))       # callback runs on the comms thread
 
 Shutdown order on WM_DELETE_WINDOW: runtime.stop() -> ui.close() -> root.destroy().

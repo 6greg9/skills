@@ -1,7 +1,7 @@
 """Design-system tokens.json -> ttk styles, named fonts and Canvas helpers.
 
-The tokens file is exported from the "Equipment HMI (tkinter)" Design System
-(project/tokens.json). Every color, font and spacing value in the app comes from here;
+The tokens file is the project's design-system export (shape: references/design-system.md
+in the tkinter-mvvm-async skill). Every color, font and spacing value in the app comes from here;
 views reference style names and theme lookups, never hex codes or font tuples.
 
 Usage:
@@ -141,14 +141,8 @@ FILL_STYLES = {
     "StateAlarm.TLabel":          ("state-alarm",     None),
 }
 
-# SECS/GEM state name -> style. Keep this next to your state enums; extend per site.
-E90_STATE_STYLE = {
-    "NotAcquired": "StateIdle.TLabel", "WaitingForHost": "StateIdle.TLabel",
-    "InCarrier": "StateIdle.TLabel", "NeedsProcessing": "StateActive.TLabel",
-    "InProcess": "StateActive.TLabel", "Processed": "StateDone.TLabel",
-    "Aborted": "StateAttention.TLabel", "Stopped": "StateAttention.TLabel",
-    "Rejected": "StateAttention.TLabel", "Lost": "StateAlarm.TLabel", "Skipped": "StateAlarm.TLabel",
-}
+# State -> style tables belong next to each state enum in the app (see
+# examples/connection_themed.py), not here: this module only knows token names.
 
 
 def apply_theme(root: tk.Misc, tokens: dict | str | pathlib.Path) -> Theme:

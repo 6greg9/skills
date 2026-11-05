@@ -41,7 +41,7 @@ Known freezes in Model A (every coroutine stops):
 - `messagebox.*`, `filedialog.*`, `wait_window`, `wait_variable`: they spin their own nested loop.
 - Any CPU-heavy callback.
 
-## Model B — comms loop on its own thread
+## Model B — I/O loop on its own thread
 
 Use `templates/comms_runtime.py`. Wiring in the app:
 
@@ -50,7 +50,7 @@ root = tk.Tk()
 ui = UiDispatcher(root)
 runtime = CommsRuntime()
 runtime.start()
-vm = LoadPortVM(plc=PlcClient(...), runtime=runtime)    # VM gets the runtime, never the UI
+vm = ConnectionVM(client=DeviceClient(...), runtime=runtime)   # VM gets the runtime, never the UI
 
 def on_close() -> None:
     runtime.stop()
@@ -65,15 +65,15 @@ In the VM, a command submits a coroutine and posts its result back through obser
 the binders marshal to the Tk thread:
 
 ```python
-async def _load(self) -> None:
-    self.busy.value = True                  # set on the comms thread; binders post to Tk
+async def _connect(self) -> None:
+    self.busy.value = True                  # set on the I/O thread; binders post to Tk
     try:
-        await self.plc.write_bit("M100", True)
-        self.state.value = await self.plc.read_state()
+        await self.client.connect(self.address.value)
+        self.state.value = await self.client.read_state()
     finally:
         self.busy.value = False
 
-self.load = Command(lambda: self.runtime.submit(self._load()), can_load)
+self.connect = Command(lambda: self.runtime.submit(self._connect()), can_connect)
 ```
 
 `CommsRuntime.stop()` cancels all tasks, waits up to `timeout` seconds, stops and closes the
@@ -83,13 +83,13 @@ loop. A task that swallows `CancelledError` cannot block closing the window.
 
 For a single legacy blocking driver: a `threading.Thread(daemon=True)` loop that reads and sets
 VM observables; binders post to the UI. Signal shutdown with a `threading.Event`, join with a
-timeout. Move to Model B as soon as there are several protocols or any protocol timers.
+timeout. Move to Model B as soon as there are several connections or any protocol timers.
 
 ## Blocking libraries and CPU work
 
-- pyserial, synchronous pymodbus, vendor PLC DLLs via ctypes, synchronous DB drivers:
+- pyserial, synchronous pymodbus, vendor SDK DLLs via ctypes, synchronous DB drivers:
   `await asyncio.to_thread(fn, ...)` (or `loop.run_in_executor`). In Model A the await resumes
-  on the Tk thread (widgets are safe afterwards); in Model B it resumes on the comms thread
+  on the Tk thread (widgets are safe afterwards); in Model B it resumes on the I/O thread
   (still go through the dispatcher).
 - CPU-heavy work (image processing, large log parsing): `ProcessPoolExecutor`, not threads.
 
